@@ -1,0 +1,28 @@
+{
+	"node": "n8n-nodes-klap.klap",
+	"nodeVersion": "1.0",
+	"codexVersion": "1.0",
+	"categories": ["Marketing & Content"],
+	"alias": [
+		"video",
+		"clips",
+		"shorts",
+		"reels",
+		"tiktok",
+		"youtube shorts",
+		"repurpose",
+		"social media"
+	],
+	"resources": {
+		"credentialDocumentation": [
+			{
+				"url": "https://github.com/ziggapp/n8n-nodes-klap?tab=readme-ov-file#credentials"
+			}
+		],
+		"primaryDocumentation": [
+			{
+				"url": "https://github.com/ziggapp/n8n-nodes-klap?tab=readme-ov-file"
+			}
+		]
+	}
+}

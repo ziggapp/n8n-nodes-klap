@@ -1,0 +1,65 @@
+{
+	"name": "n8n-nodes-klap",
+	"version": "0.1.0",
+	"description": "Klap is an AI video editor that turns long videos into viral short clips with captions and reframing for TikTok, Reels and YouTube Shorts.",
+	"license": "MIT",
+	"homepage": "https://github.com/ziggapp/n8n-nodes-klap#readme",
+	"keywords": [
+		"n8n-community-node-package",
+		"n8n",
+		"klap",
+		"video",
+		"clips",
+		"shorts",
+		"reels",
+		"tiktok",
+		"youtube-shorts"
+	],
+	"author": {
+		"name": "Klap",
+		"email": "support@klap.app",
+		"url": "https://klap.app"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/ziggapp/n8n-nodes-klap.git"
+	},
+	"bugs": {
+		"url": "https://github.com/ziggapp/n8n-nodes-klap/issues"
+	},
+	"scripts": {
+		"build": "n8n-node build",
+		"build:watch": "tsc --watch",
+		"dev": "n8n-node dev",
+		"lint": "n8n-node lint",
+		"lint:fix": "n8n-node lint --fix",
+		"test": "vitest run",
+		"release": "n8n-node release",
+		"prepublishOnly": "n8n-node prerelease"
+	},
+	"files": [
+		"dist"
+	],
+	"n8n": {
+		"n8nNodesApiVersion": 1,
+		"strict": true,
+		"credentials": [
+			"dist/credentials/KlapOAuth2Api.credentials.js"
+		],
+		"nodes": [
+			"dist/nodes/Klap/Klap.node.js",
+			"dist/nodes/Klap/KlapTrigger.node.js"
+		]
+	},
+	"devDependencies": {
+		"@n8n/node-cli": "*",
+		"eslint": "9.32.0",
+		"prettier": "3.6.2",
+		"release-it": "^21.1.0",
+		"typescript": "5.9.2",
+		"vitest": "^3.2.7"
+	},
+	"peerDependencies": {
+		"n8n-workflow": "*"
+	}
+}
