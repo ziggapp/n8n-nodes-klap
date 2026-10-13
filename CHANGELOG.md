@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.2
+
+- Package author email is now team@klap.app. No functional changes.
+
 ## 0.1.1
 
 - Published from GitHub Actions with npm provenance, as n8n requires for verified community nodes. No functional changes.
