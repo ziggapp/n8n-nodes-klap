@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.1
+
+- Published from GitHub Actions with npm provenance, as n8n requires for verified community nodes. No functional changes.
+
 ## 0.1.0
 
 - Klap node: Project (Create, Get, Get Many), Clip (Get Many, Export, Schedule, Write Caption), Export (Get), Social Account (Get Many).

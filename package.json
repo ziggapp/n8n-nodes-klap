@@ -1,6 +1,6 @@
 {
 	"name": "n8n-nodes-klap",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "Klap is an AI video editor that turns long videos into viral short clips with captions and reframing for TikTok, Reels and YouTube Shorts.",
 	"license": "MIT",
 	"homepage": "https://github.com/ziggapp/n8n-nodes-klap#readme",
