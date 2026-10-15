@@ -1,13 +1,16 @@
 import type { IDataObject, IExecuteFunctions, INodeExecutionData } from 'n8n-workflow';
-import { NodeOperationError } from 'n8n-workflow';
+import { NodeOperationError, sleep } from 'n8n-workflow';
 
 import {
+	CLIPS_POLL_INTERVAL_MS,
+	CLIPS_WAIT_TICK_MS,
 	CREATE_TIMEOUT_MS,
+	DEFAULT_CLIPS_TIMEOUT_MINUTES,
 	MAX_INSTRUCTIONS_LENGTH,
 	MAX_PROJECTS_PER_PAGE,
 	WEB_URL,
 } from '../shared/constants';
-import { toProject } from '../shared/normalize';
+import { toClips, toProject } from '../shared/normalize';
 import { klapRequest, segment } from '../shared/transport';
 import type { KlapClip, KlapTask } from '../shared/types';
 import { uploadBinaryVideo } from '../shared/upload';
@@ -144,7 +147,77 @@ export async function create(this: IExecuteFunctions, i: number): Promise<INodeE
 	} catch {
 		task = taskFromCreated(created);
 	}
-	return [{ json: toProject(task) }];
+
+	// On by default from node version 1.1; version 1 returned the project right away.
+	const wait = this.getNodeParameter(
+		'waitForClips',
+		i,
+		this.getNode().typeVersion >= 1.1,
+	) as boolean;
+	if (!wait) return [{ json: toProject(task) }];
+	return await waitForClips.call(this, i, task);
+}
+
+/** Polls the project until Klap is done, then returns one item per clip, best first. */
+async function waitForClips(
+	this: IExecuteFunctions,
+	i: number,
+	created: KlapTask,
+): Promise<INodeExecutionData[]> {
+	const timeoutMinutes = this.getNodeParameter(
+		'waitTimeoutMinutes',
+		i,
+		DEFAULT_CLIPS_TIMEOUT_MINUTES,
+	) as number;
+	const deadline = Date.now() + timeoutMinutes * 60 * 1000;
+	const cancelSignal = this.getExecutionCancelSignal?.();
+	const what = `project ${created.id}`;
+	const projectPath = `/tasks/${segment(created.id)}`;
+
+	let task = created;
+	let nextCheck = Date.now() + CLIPS_POLL_INTERVAL_MS;
+	while (task.status === 'processing') {
+		if (cancelSignal?.aborted) {
+			throw new NodeOperationError(this.getNode(), 'The execution was canceled', {
+				itemIndex: i,
+			});
+		}
+		if (Date.now() >= deadline) {
+			throw new NodeOperationError(
+				this.getNode(),
+				`Klap is still clipping this video after ${timeoutMinutes} minute${timeoutMinutes === 1 ? '' : 's'}`,
+				{
+					itemIndex: i,
+					description: `The project keeps going in Klap${task.url ? ` (${task.url})` : ''}. Get its clips later with Project → Get (project ID ${task.id}) or the Klap Trigger, or raise Timeout (Minutes).`,
+				},
+			);
+		}
+		await sleep(CLIPS_WAIT_TICK_MS);
+		if (Date.now() < nextCheck) continue;
+		nextCheck = Date.now() + CLIPS_POLL_INTERVAL_MS;
+		task = await klapRequest<KlapTask>(this, 'GET', projectPath, { itemIndex: i, what });
+	}
+
+	if (task.status !== 'ready') {
+		const project = toProject(task);
+		throw new NodeOperationError(
+			this.getNode(),
+			project.error_message ?? `Klap couldn't clip this video (status: ${task.status})`,
+			{ itemIndex: i, description: `Project ID ${task.id}` },
+		);
+	}
+
+	const clips = await klapRequest<KlapClip[]>(this, 'GET', `${projectPath}/clips`, {
+		itemIndex: i,
+		what,
+	});
+	if (clips.length === 0) {
+		throw new NodeOperationError(this.getNode(), "Klap didn't find any clips in this video", {
+			itemIndex: i,
+			description: `Project ID ${task.id}. Try another video, or change the clip length or instructions.`,
+		});
+	}
+	return toClips(clips, task).map((clip) => ({ json: clip }));
 }
 
 export async function get(this: IExecuteFunctions, i: number): Promise<INodeExecutionData[]> {

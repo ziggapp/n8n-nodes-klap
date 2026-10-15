@@ -1,6 +1,6 @@
 import type { INodeProperties } from 'n8n-workflow';
 
-import { MAX_PROJECTS_PER_PAGE } from '../shared/constants';
+import { DEFAULT_CLIPS_TIMEOUT_MINUTES, MAX_PROJECTS_PER_PAGE } from '../shared/constants';
 import { projectLocator, returnAllAndLimit } from './common';
 
 const LANGUAGES: Array<[string, string]> = [
@@ -68,7 +68,7 @@ export const projectFields: INodeProperties[] = [
 		name: 'createNotice',
 		type: 'notice',
 		default: '',
-		displayOptions: { show: create },
+		displayOptions: { show: { ...create, waitForClips: [false] } },
 	},
 	{
 		displayName: 'Video Source',
@@ -112,6 +112,33 @@ export const projectFields: INodeProperties[] = [
 		hint: 'The name of the input binary field containing the video (MP4, MOV or WebM)',
 		description: 'Klap uploads this file, then clips it. Videos can be up to 4 hours long.',
 		displayOptions: { show: { ...create, source: ['binary'] } },
+	},
+	{
+		displayName: 'Wait for Clips',
+		name: 'waitForClips',
+		type: 'boolean',
+		default: true,
+		description: 'Whether to wait until Klap has made the clips, usually 5 to 15 minutes, then output one item per clip, best first. Each clip has a preview_url to watch or embed it; add Clip → Export for an MP4. Turn off to get the project right away with status "processing".',
+		displayOptions: { show: { ...create, '@version': [{ _cnd: { gte: 1.1 } }] } },
+	},
+	{
+		// Version 1 returned the project right away: keep that default for existing workflows.
+		displayName: 'Wait for Clips',
+		name: 'waitForClips',
+		type: 'boolean',
+		default: false,
+		description: 'Whether to wait until Klap has made the clips, usually 5 to 15 minutes, then output one item per clip, best first. Each clip has a preview_url to watch or embed it; add Clip → Export for an MP4. Turn off to get the project right away with status "processing".',
+		displayOptions: { show: { ...create, '@version': [1] } },
+	},
+	{
+		displayName: 'Timeout (Minutes)',
+		name: 'waitTimeoutMinutes',
+		type: 'number',
+		typeOptions: { minValue: 1 },
+		default: DEFAULT_CLIPS_TIMEOUT_MINUTES,
+		description:
+			'How long to wait for the clips. If Klap is still clipping by then, the node fails with the project ID, and the project keeps going in Klap.',
+		displayOptions: { show: { ...create, waitForClips: [true] } },
 	},
 	{
 		displayName: 'Additional Fields',

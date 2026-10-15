@@ -27,7 +27,7 @@ A **project** is one long video you clipped; its **clips** are the short videos 
 
 | Resource | Operation | What it does |
 |---|---|---|
-| Project | Create | Clip a video: from a link (YouTube, Google Drive, Dropbox, Vimeo, Twitch, Loom or a direct link to a video file) or from a binary file (MP4, MOV or WebM, uploaded for you). Options: max number of clips, clip length, aspect ratio, language, instructions ("the funniest moments"), project name. Returns the project right away with status `processing`; clipping takes several minutes. |
+| Project | Create | Clip a video: from a link (YouTube, Google Drive, Dropbox, Vimeo, Twitch, Loom or a direct link to a video file) or from a binary file (MP4, MOV or WebM, uploaded for you). Options: max number of clips, clip length, aspect ratio, language, instructions ("the funniest moments"), project name. Waits until the clips are ready (*Wait for Clips*, on by default), then outputs one item per clip, best first, each with a `preview_url` to watch or embed it. Turn *Wait for Clips* off to get the project right away with status `processing`. |
 | Project | Get | A project and, once it is ready, its clips (best first). |
 | Project | Get Many | Your most recent projects, newest first (up to 50). |
 | Clip | Get Many | The clips of a ready project, best first, with an optional minimum virality score. |
@@ -80,7 +80,7 @@ Self-hosted: n8n sends Klap its OAuth callback URL (`<your n8n URL>/rest/oauth2-
 
 ## Usage
 
-- **Clipping takes several minutes.** Project → Create returns at once. To act on the clips, start a second workflow with the Klap Trigger (Project Ready or New Clip), or use Project → Get later.
+- **Clipping takes several minutes**, usually 5 to 15. Project → Create waits for the clips by default, up to *Timeout (Minutes)* (60 by default), and the execution keeps running meanwhile. On n8n plans with a short execution time limit, turn *Wait for Clips* off and act on the clips with the Klap Trigger (Project Ready or New Clip) or Project → Get instead. Workflows built with version 0.1 keep returning the project right away.
 - **Exports**: Clip → Export renders the clip (about as long as the clip itself) and waits for it. `video_url` is a public link you can pass to other nodes; turn on **Download Video** to get the MP4 as binary data (for Google Drive, Dropbox, S3 and so on). Exports count toward your plan's export allowance, so export a clip once and reuse its `video_url`.
 - **Scheduling**: connect your social accounts in Klap first, at [klap.app/calendar](https://klap.app/calendar). Leave **Publish At** empty to post within a couple of minutes. Times without an offset are read in the **Time Zone** you set (UTC by default); values with an offset, such as `{{ $now.plus(1, 'day') }}`, are used as they are. A clip can go to one account per platform at a time. Posting to TikTok needs **TikTok Privacy** (under Additional Fields). Review or change posts at [klap.app/calendar](https://klap.app/calendar).
 - **Errors** tell you what to do: for example "This isn't included in your current Klap plan (available on the Pro plan). See plans at https://klap.app/pricing." or "This YouTube video is age-restricted." Turn on **Continue On Fail** to keep going and get the message in an `error` field.
@@ -88,7 +88,9 @@ Self-hosted: n8n sends Klap its OAuth callback URL (`<your n8n URL>/rest/oauth2-
 
 ## Example workflows
 
-**1. Post the best clip of every new project to YouTube Shorts.** Klap Trigger (New Clip, *Only the Best N Clips per Project* = 1, *Minimum Virality Score* = 70) → Klap (Clip → Schedule, Clip ID `{{ $json.id }}`, your YouTube account, caption left empty so Klap writes one).
+**1. Clip a video from a form and show the clips.** n8n Form Trigger (a *Video URL* field) → Klap (Project → Create, Video URL `{{ $json['Video URL'] }}`) → n8n Form (Form Ending, *Show Text*) listing each clip's `preview_url` with `{{ $input.all().map(c => c.json.preview_url).join('<br>') }}`. Whoever fills in the form sees their clips on the same page a few minutes later. Add Klap (Clip → Export) before the last step for MP4 files.
+
+**2. Post the best clip of every new project to YouTube Shorts.** Klap Trigger (New Clip, *Only the Best N Clips per Project* = 1, *Minimum Virality Score* = 70) → Klap (Clip → Schedule, Clip ID `{{ $json.id }}`, your YouTube account, caption left empty so Klap writes one).
 
 Copy this JSON and paste it into an n8n workflow, then pick your Klap credential and social account:
 
@@ -127,11 +129,11 @@ Copy this JSON and paste it into an n8n workflow, then pick your Klap credential
 }
 ```
 
-**2. Clip every video added to a Google Drive folder.** Google Drive Trigger (File Created in a folder) → Google Drive (Download) → Klap (Project → Create, Video Source *Binary File*, Input Binary Field `data`). Or skip the download and pass the file's share link as *Video URL*.
+**3. Clip every video added to a Google Drive folder.** Google Drive Trigger (File Created in a folder) → Google Drive (Download) → Klap (Project → Create, Video Source *Binary File*, Input Binary Field `data`). Or skip the download and pass the file's share link as *Video URL*.
 
-**3. Back up every good clip to Dropbox.** Klap Trigger (New Clip, *Minimum Virality Score* = 80) → Klap (Clip → Export, Clip ID `{{ $json.id }}`, *Download Video* on) → Dropbox (Upload, binary field `data`, file name `{{ $json.file_name }}`).
+**4. Back up every good clip to Dropbox.** Klap Trigger (New Clip, *Minimum Virality Score* = 80) → Klap (Clip → Export, Clip ID `{{ $json.id }}`, *Download Video* on) → Dropbox (Upload, binary field `data`, file name `{{ $json.file_name }}`).
 
-**4. Clip each new YouTube upload.** RSS Feed Trigger (`https://www.youtube.com/feeds/videos.xml?channel_id=<your channel id>`) → Klap (Project → Create, Video URL `{{ $json.link }}`, Instructions "the most quotable moments").
+**5. Clip each new YouTube upload.** RSS Feed Trigger (`https://www.youtube.com/feeds/videos.xml?channel_id=<your channel id>`) → Klap (Project → Create, Video URL `{{ $json.link }}`, Instructions "the most quotable moments").
 
 ## Resources
 
@@ -141,4 +143,6 @@ Copy this JSON and paste it into an n8n workflow, then pick your Klap credential
 
 ## Version history
 
+- **0.2.0**: Project → Create waits for the clips and outputs one item per clip (*Wait for Clips*, on by default in node version 1.1), with *Timeout (Minutes)*.
+- **0.1.1, 0.1.2**: published with npm provenance; author email team@klap.app.
 - **0.1.0**: first release. Klap node (Project, Clip, Export, Social Account), Klap Trigger (Project Ready, New Clip, Project Failed) and the Klap OAuth2 API credential.

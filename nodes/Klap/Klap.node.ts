@@ -41,7 +41,7 @@ export class Klap implements INodeType {
 		name: 'klap',
 		icon: { light: 'file:../../icons/klap.svg', dark: 'file:../../icons/klap.dark.svg' },
 		group: ['transform'],
-		version: 1,
+		version: [1, 1.1],
 		subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
 		description:
 			'Turn long videos into viral short clips with Klap, then export them or post them to social media',

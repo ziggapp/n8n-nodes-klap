@@ -19,6 +19,12 @@ export const POST_NOW_DELAY_MS = 2 * 60 * 1000;
 export const EXPORT_POLL_INTERVAL_MS = 5000;
 export const DEFAULT_EXPORT_TIMEOUT_MINUTES = 10;
 
+/** Project → Create with Wait for Clips: ask Klap every 15 s; check for a canceled execution every 5 s. */
+export const CLIPS_POLL_INTERVAL_MS = 15_000;
+export const CLIPS_WAIT_TICK_MS = 5000;
+/** Most videos take 5 to 15 minutes; multi-hour streams can take longer. */
+export const DEFAULT_CLIPS_TIMEOUT_MINUTES = 60;
+
 /** Requests that can take a while: video validation on create, the blocking download. */
 export const CREATE_TIMEOUT_MS = 120 * 1000;
 export const DOWNLOAD_TIMEOUT_MS = 11 * 60 * 1000;

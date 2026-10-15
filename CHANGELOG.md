@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.0
+
+- Project → Create can wait for the clips: **Wait for Clips** polls the project until Klap is done, then outputs one item per clip, best first, each with a `preview_url` to watch or embed it. A form, Project → Create and a final page are now a whole workflow, with no trigger or second workflow.
+- Wait for Clips is on by default in the Klap node's new version 1.1. Existing workflows keep version 1, which returns the project right away as before.
+- **Timeout (Minutes)**, 60 by default: past it, the node fails with the project ID and the project keeps going in Klap. A project Klap couldn't clip, or one with no clips, fails with the reason.
+
 ## 0.1.2
 
 - Package author email is now team@klap.app. No functional changes.
